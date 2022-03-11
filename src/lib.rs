@@ -82,14 +82,14 @@ pub fn run(config: Config) -> MyResult<()> {
                 Err(e) => eprintln!("{}", e),
                 Ok(entry) => {
                     let file_type = entry.file_type();
-                    if config.entry_types.len() > 0 && config.entry_types.iter().all(|t| match t {
+                    if !config.entry_types.is_empty() && config.entry_types.iter().all(|t| match t {
                         Dir => !file_type.is_dir(),
                         File => !file_type.is_file(),
                         Link => !file_type.is_symlink(),
                     }) {
                         continue;
                     }
-                    if config.names.len() == 0 || config.names.iter().any(|ex| {
+                    if config.names.is_empty() || config.names.iter().any(|ex| {
                         ex.is_match(&entry.path().file_name().unwrap().to_string_lossy())
                     }) {
                         println!("{}", entry.path().display());
