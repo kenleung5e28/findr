@@ -55,20 +55,20 @@ pub fn get_args() -> MyResult<Config> {
     Ok(Config {
         paths: matches.values_of_lossy("paths").unwrap(),
         names: matches.values_of_lossy("names")
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .iter()
             .map(|s| Regex::new(s.as_str())
                 .map_err(|_| format!("Invalid --name \"{}\"", s))
             )
             .collect::<Result<Vec<_>, _>>()?,
         entry_types: matches.values_of_lossy("entry_types")
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .iter()
             .map(|t| match t.as_str() {
                 "f" => File,
                 "d" => Dir,
                 "l" => Link,
-                _ => unreachable!(),
+                _ => unreachable!("Invalid entry type"),
             })
             .collect::<Vec<_>>(),
     })
