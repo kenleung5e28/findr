@@ -37,6 +37,7 @@ pub fn get_args() -> MyResult<Config> {
             .long("name")
             .value_name("NAME")
             .help("Name")
+            .takes_value(true)
             .multiple(true)
         )
         .arg(
@@ -45,6 +46,7 @@ pub fn get_args() -> MyResult<Config> {
             .long("type")
             .value_name("TYPE")
             .help("Entry type")
+            .takes_value(true)
             .multiple(true)
             .possible_values(&["f", "d", "l"])
         )
