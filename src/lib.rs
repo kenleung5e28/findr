@@ -70,7 +70,7 @@ pub fn get_args() -> MyResult<Config> {
                 "l" => Link,
                 _ => unreachable!("Invalid entry type"),
             })
-            .collect::<Vec<_>>(),
+            .collect(),
     })
 }
 
