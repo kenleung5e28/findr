@@ -2,7 +2,7 @@ use crate::EntryType::*;
 use clap::{App, Arg};
 use regex::Regex;
 use std::error::Error;
-use walkdir::WalkDir;
+use walkdir::{WalkDir, DirEntry};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 
@@ -76,27 +76,32 @@ pub fn get_args() -> MyResult<Config> {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
+    let types_filter = |entry: &DirEntry| {
+        let file_type = entry.file_type();
+        config.entry_types.is_empty() || config.entry_types.iter().any(|t| match t {
+            Dir => file_type.is_dir(),
+            File => file_type.is_file(),
+            Link => file_type.is_symlink(),
+        })
+    };
+    let names_filter = |entry: &DirEntry| {
+        config.names.is_empty() || config.names.iter().any(|ex| {
+            ex.is_match(&entry.path().file_name().unwrap().to_string_lossy())
+        })
+    };
     for path in config.paths {
-        for entry in WalkDir::new(path) {
-            match entry {
-                Err(e) => eprintln!("{}", e),
-                Ok(entry) => {
-                    let file_type = entry.file_type();
-                    if !config.entry_types.is_empty() && config.entry_types.iter().all(|t| match t {
-                        Dir => !file_type.is_dir(),
-                        File => !file_type.is_file(),
-                        Link => !file_type.is_symlink(),
-                    }) {
-                        continue;
-                    }
-                    if config.names.is_empty() || config.names.iter().any(|ex| {
-                        ex.is_match(&entry.path().file_name().unwrap().to_string_lossy())
-                    }) {
-                        println!("{}", entry.path().display());
-                    }
+        WalkDir::new(path)
+            .into_iter()
+            .filter_map(|entry| match entry {
+                Err(e) => {
+                    eprintln!("{}", e);
+                    None
                 }
-            }
-        }
+                Ok(entry) => Some(entry),
+            })
+            .filter(types_filter)
+            .filter(names_filter)
+            .for_each(|entry| println!("{}", entry.path().display()));
     }
     Ok(())
 }
